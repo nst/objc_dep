@@ -2,7 +2,8 @@
 
 # Nicolas Seriot
 # 2011-01-06
-# https://gist.github.com/768457
+# https://github.com/nst/objc_dep/
+# http://seriot.ch/blog.php?article=20110124
 
 """
 Input: path of an Objective-C project
