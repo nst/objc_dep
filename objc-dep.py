@@ -25,15 +25,11 @@ regex_import = re.compile("#import \"(?P<filename>\S*)\.h")
 def filenames_imported_in_file(path):
     imports = set()
     
-    f = open(path)
-    
-    for line in f.xreadlines():
+    for line in open(path):
         results = re.search(regex_import, line)
         if results:
             filename = results.group('filename')
             imports.add(filename)
-        
-    f.close()
     
     return imports
     
