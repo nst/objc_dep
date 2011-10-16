@@ -34,18 +34,19 @@ def filenames_imported_in_file(path):
     return imports
     
 def add_imports_from_files(d, dir, files):
-
-    for f in files:
-        if f.endswith('.h') or f.endswith('.m'):
-            base_name = f.split('.')[0]
-            
-            if base_name not in d:
-                d[base_name] = set()
-            
-            path = os.path.join(dir, f)
-            if not os.path.isdir(path):
-                imports = filenames_imported_in_file(path)
-                d[base_name] = d[base_name].union(imports)
+    
+    objc_files = (f for f in files if f.endswith('.h') or f.endswith('.m'))
+    
+    for f in objc_files:
+        base_name = f.split('.')[0]
+        
+        if base_name not in d:
+            d[base_name] = set()
+        
+        path = os.path.join(dir, f)
+        if not os.path.isdir(path):
+            imports = filenames_imported_in_file(path)
+            d[base_name] = d[base_name].union(imports)
     
     return d
 
