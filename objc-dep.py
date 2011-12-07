@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
 # Nicolas Seriot
-# 2011-01-06
+# 2011-01-06 -> 2011-12-07
 # https://github.com/nst/objc_dep/
-# http://seriot.ch/blog.php?article=20110124
 
 """
 Input: path of an Objective-C project
@@ -19,55 +18,82 @@ import sys
 import os
 import sets
 import re
+from os.path import basename
 
 regex_import = re.compile("#import \"(?P<filename>\S*)\.h")
 
-def filenames_imported_in_file(path):
-    imports = set()
-    
+def gen_filenames_imported_in_file(path):
     for line in open(path):
         results = re.search(regex_import, line)
         if results:
             filename = results.group('filename')
-            imports.add(filename)
-    
-    return imports
-    
-def add_imports_from_files(d, dir, files):
-    
-    objc_files = (f for f in files if f.endswith('.h') or f.endswith('.m'))
-    
-    for f in objc_files:
-        base_name = f.split('.')[0]
-        
-        if base_name not in d:
-            d[base_name] = set()
-        
-        path = os.path.join(dir, f)
-        if not os.path.isdir(path):
-            imports = filenames_imported_in_file(path)
-            d[base_name] = d[base_name].union(imports)
-    
-    return d
+            yield filename
 
-def dependancies_in_dot_format(d):
+def dependancies_in_dot_format(d, tw_set=None):
     l = []
     l.append("digraph G {")
-    
+    l.append("\tnode [shape=box];")
+    two_ways = []
+
     for k, set in d.iteritems():
         if set:
             set.discard(k)
-        deps = map(lambda s:'"%s"' % s, set)
-        deps = '; '.join(deps)
-        l.append("\t\"%s\" -> {%s};" % (k, deps))
-    l.append("}\n")
+        
+        if len(set) == 0:
+            l.append("\t\"%s\" -> {};" % (k))            
+        
+        for k2 in set:
+            if (k, k2) in tw_set or (k2, k) in tw_set:
+                two_ways.append((k, k2))
+            else:
+                l.append("\t\"%s\" -> \"%s\";" % (k, k2))
     
+    l.append("\t")
+    l.append("\tedge [color=blue];")
+
+    for (k, k2) in two_ways:
+        l.append("\t\"%s\" -> \"%s\";" % (k, k2))
+    
+    l.append("}\n")
     return '\n'.join(l)
 
 def dependancies_in_project(path):
     d = {}
-    os.path.walk(path, add_imports_from_files, d)
+    
+    for root, dirs, files in os.walk(path):
+
+        objc_files = (f for f in files if f.endswith('.h') or f.endswith('.m') or f.endswith('.pch'))
+
+        for f in objc_files:
+            filename = os.path.splitext(f)[0]
+
+            if filename not in d:
+                d[filename] = set()
+            
+            path = os.path.join(root, f)
+            
+            for imported_filename in gen_filenames_imported_in_file(path):
+                d[filename].add(imported_filename)
+
     return d
+    
+def two_ways_dependancies(d):
+
+    two_ways = set()
+
+    # d is {'a1':[b1, b2], 'a2':[b1, b3, b4], ...}
+
+    for a, l in d.iteritems():
+        for b in l:
+            if b in d and a in d[b]:
+                if (a, b) in two_ways:
+                    continue
+                if (b, a) in two_ways:
+                    continue
+                if a != b:
+                    two_ways.add((a, b))
+                    
+    return two_ways
 
 def main():
     if len(sys.argv) != 2 or not os.path.exists(sys.argv[1]):
@@ -75,8 +101,9 @@ def main():
         exit(0)
     
     d = dependancies_in_project(sys.argv[1])
-    s = dependancies_in_dot_format(d)
+    two_ways = two_ways_dependancies(d)
+    s = dependancies_in_dot_format(d, two_ways)
     print s
-
+  
 if __name__=='__main__':
     main()
