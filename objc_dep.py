@@ -48,7 +48,8 @@ def dependancies_in_project(path, ext):
             path = os.path.join(root, f)
             
             for imported_filename in gen_filenames_imported_in_file(path):
-                d[filename].add(imported_filename)
+                if imported_filename != filename:
+                    d[filename].add(imported_filename)
 
     return d
 
@@ -81,6 +82,35 @@ def two_ways_dependancies(d):
                     
     return two_ways
     
+def referenced_classes_from_dict(d):
+    d2 = {}
+
+    for k, deps in d.iteritems():
+        for x in deps:
+            d2.setdefault(x, Set())
+            d2[x].add(k)
+    
+    return d2
+    
+def print_frequencies_chart(d):
+    
+    lengths = map(lambda x:len(x), d.itervalues())
+    max_length = max(lengths)
+    
+    for i in range(0, max_length+1):
+        s = "%2d | %s\n" % (i, '*'*lengths.count(i))
+        sys.stderr.write(s)
+
+    sys.stderr.write("\n")
+    
+    l = [Set() for i in range(max_length+1)]
+    for k, v in d.iteritems():
+        l[len(v)].add(k)
+
+    for i in range(0, max_length+1):
+        s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
+        sys.stderr.write(s)
+        
 def dependancies_in_dot_format(path):
 
     d = dependancies_in_project_with_file_extensions(path, ['.h', '.m'])
@@ -89,6 +119,15 @@ def dependancies_in_dot_format(path):
 
     pch_set = dependancies_in_project(path, '.pch')
 
+    #
+    
+    sys.stderr.write("# number of imports\n\n")
+    print_frequencies_chart(d)
+    
+    sys.stderr.write("\n# times the class is imported\n\n")
+    d2 = referenced_classes_from_dict(d)    
+    print_frequencies_chart(d2)
+        
     #
 
     l = []
