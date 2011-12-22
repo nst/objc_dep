@@ -48,7 +48,7 @@ def dependancies_in_project(path, ext):
             path = os.path.join(root, f)
             
             for imported_filename in gen_filenames_imported_in_file(path):
-                if imported_filename != filename:
+                if imported_filename != filename and '+' not in imported_filename:
                     d[filename].add(imported_filename)
 
     return d
