@@ -81,7 +81,19 @@ def two_ways_dependancies(d):
                     two_ways.add((a, b))
                     
     return two_ways
+
+def category_files(d):
+    d2 = {}
+    l = []
     
+    for k, v in d.iteritems():
+        if not v and '+' in k:
+            l.append(k)
+        else:
+            d2[k] = v
+
+    return l, d2
+
 def referenced_classes_from_dict(d):
     d2 = {}
 
@@ -116,6 +128,8 @@ def dependancies_in_dot_format(path):
     d = dependancies_in_project_with_file_extensions(path, ['.h', '.m'])
     
     two_ways_set = two_ways_dependancies(d)
+
+    category_list, d = category_files(d)
 
     pch_set = dependancies_in_project(path, '.pch')
 
@@ -160,6 +174,11 @@ def dependancies_in_dot_format(path):
     for (k, k2) in two_ways:
         l.append("\t\"%s\" -> \"%s\";" % (k, k2))
     
+    l.append("\t")
+    l.append("\tedge [color=black];")
+    l.append("\tnode [shape=plaintext];")
+    l.append("\t\"Categories\" [label=\"Categories:\\n\\n%s\"];" % "\\n".join(category_list))
+
     l.append("}\n")
     return '\n'.join(l)
 
