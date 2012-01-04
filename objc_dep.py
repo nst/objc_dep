@@ -23,7 +23,7 @@ from sets import Set
 import re
 from os.path import basename
 
-regex_import = re.compile("#import \"(?P<filename>\S*)\.h")
+regex_import = re.compile("#(import|include) \"(?P<filename>\S*)\.h")
 
 def gen_filenames_imported_in_file(path):
     for line in open(path):
@@ -107,6 +107,7 @@ def referenced_classes_from_dict(d):
 def print_frequencies_chart(d):
     
     lengths = map(lambda x:len(x), d.itervalues())
+    if not lengths: return
     max_length = max(lengths)
     
     for i in range(0, max_length+1):
@@ -125,8 +126,8 @@ def print_frequencies_chart(d):
         
 def dependancies_in_dot_format(path):
 
-    d = dependancies_in_project_with_file_extensions(path, ['.h', '.m'])
-    
+    d = dependancies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'])
+
     two_ways_set = two_ways_dependancies(d)
 
     category_list, d = category_files(d)
