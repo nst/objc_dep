@@ -174,10 +174,11 @@ def dependancies_in_dot_format(path):
     for (k, k2) in two_ways:
         l.append("\t\"%s\" -> \"%s\";" % (k, k2))
     
-    l.append("\t")
-    l.append("\tedge [color=black];")
-    l.append("\tnode [shape=plaintext];")
-    l.append("\t\"Categories\" [label=\"Categories:\\n\\n%s\"];" % "\\n".join(category_list))
+    if category_list:
+        l.append("\t")
+        l.append("\tedge [color=black];")
+        l.append("\tnode [shape=plaintext];")
+        l.append("\t\"Categories\" [label=\"%s\"];" % "\\n".join(category_list))
 
     l.append("}\n")
     return '\n'.join(l)
