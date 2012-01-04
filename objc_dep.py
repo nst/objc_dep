@@ -23,7 +23,7 @@ from sets import Set
 import re
 from os.path import basename
 
-regex_import = re.compile("#import \"(?P<filename>\S*)\.h")
+regex_import = re.compile("#(import|include) \"(?P<filename>\S*)\.h")
 
 def gen_filenames_imported_in_file(path):
     for line in open(path):
@@ -48,7 +48,7 @@ def dependancies_in_project(path, ext):
             path = os.path.join(root, f)
             
             for imported_filename in gen_filenames_imported_in_file(path):
-                if imported_filename != filename:
+                if imported_filename != filename and '+' not in imported_filename:
                     d[filename].add(imported_filename)
 
     return d
@@ -81,7 +81,19 @@ def two_ways_dependancies(d):
                     two_ways.add((a, b))
                     
     return two_ways
+
+def category_files(d):
+    d2 = {}
+    l = []
     
+    for k, v in d.iteritems():
+        if not v and '+' in k:
+            l.append(k)
+        else:
+            d2[k] = v
+
+    return l, d2
+
 def referenced_classes_from_dict(d):
     d2 = {}
 
@@ -95,6 +107,7 @@ def referenced_classes_from_dict(d):
 def print_frequencies_chart(d):
     
     lengths = map(lambda x:len(x), d.itervalues())
+    if not lengths: return
     max_length = max(lengths)
     
     for i in range(0, max_length+1):
@@ -113,9 +126,11 @@ def print_frequencies_chart(d):
         
 def dependancies_in_dot_format(path):
 
-    d = dependancies_in_project_with_file_extensions(path, ['.h', '.m'])
-    
+    d = dependancies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'])
+
     two_ways_set = two_ways_dependancies(d)
+
+    category_list, d = category_files(d)
 
     pch_set = dependancies_in_project(path, '.pch')
 
@@ -160,6 +175,12 @@ def dependancies_in_dot_format(path):
     for (k, k2) in two_ways:
         l.append("\t\"%s\" -> \"%s\";" % (k, k2))
     
+    if category_list:
+        l.append("\t")
+        l.append("\tedge [color=black];")
+        l.append("\tnode [shape=plaintext];")
+        l.append("\t\"Categories\" [label=\"%s\"];" % "\\n".join(category_list))
+
     l.append("}\n")
     return '\n'.join(l)
 
