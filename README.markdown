@@ -1,7 +1,7 @@
-#### update 2012-01-11
+_update 2012-01-11_
 
-    - merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/1) support for C projects and better handling of categories
-    - see also his blog post [Dependency Graph Tool for iOS Projects](http://jomnius.blogspot.com/2012/01/dependency-graph-tool-for-ios-projects.html)
+- merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/1) support for C projects and better handling of categories
+- see also his blog post [Dependency Graph Tool for iOS Projects](http://jomnius.blogspot.com/2012/01/dependency-graph-tool-for-ios-projects.html)
 
 # Refactoring by graphing class dependancies
 
