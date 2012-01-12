@@ -23,7 +23,7 @@ from sets import Set
 import re
 from os.path import basename
 
-regex_import = re.compile("#(import|include) \"(?P<filename>\S*)\.h")
+regex_import = re.compile("^#(import|include) \"(?P<filename>\S*)\.h")
 
 def gen_filenames_imported_in_file(path):
     for line in open(path):
