@@ -7,7 +7,7 @@
 """
 Input: path of an Objective-C project
 
-Output: import dependancies Graphviz format
+Output: import dependencies Graphviz format
 
 Typical usage: $ python objc_dep.py /path/to/project > graph.dot
 
@@ -32,7 +32,7 @@ def gen_filenames_imported_in_file(path):
             filename = results.group('filename')
             yield filename
 
-def dependancies_in_project(path, ext):
+def dependencies_in_project(path, ext):
     d = {}
     
     for root, dirs, files in os.walk(path):
@@ -53,12 +53,12 @@ def dependancies_in_project(path, ext):
 
     return d
 
-def dependancies_in_project_with_file_extensions(path, exts):
+def dependencies_in_project_with_file_extensions(path, exts):
 
     d = {}
     
     for ext in exts:
-        d2 = dependancies_in_project(path, ext)
+        d2 = dependencies_in_project(path, ext)
         for (k, v) in d2.iteritems():
             if not k in d:
                 d[k] = Set()
@@ -66,7 +66,7 @@ def dependancies_in_project_with_file_extensions(path, exts):
 
     return d
 
-def two_ways_dependancies(d):
+def two_ways_dependencies(d):
 
     two_ways = Set()
 
@@ -124,15 +124,15 @@ def print_frequencies_chart(d):
         s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
         sys.stderr.write(s)
         
-def dependancies_in_dot_format(path):
+def dependencies_in_dot_format(path):
 
-    d = dependancies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'])
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'])
 
-    two_ways_set = two_ways_dependancies(d)
+    two_ways_set = two_ways_dependencies(d)
 
     category_list, d = category_files(d)
 
-    pch_set = dependancies_in_project(path, '.pch')
+    pch_set = dependencies_in_project(path, '.pch')
 
     #
     
@@ -189,7 +189,7 @@ def main():
         print "USAGE: $ python %s PROJECT_PATH" % sys.argv[0]
         exit(0)
 
-    print dependancies_in_dot_format(sys.argv[1])
+    print dependencies_in_dot_format(sys.argv[1])
   
 if __name__=='__main__':
     main()
