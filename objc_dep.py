@@ -22,18 +22,25 @@ import os
 from sets import Set
 import re
 from os.path import basename
+import argparse
 
 regex_import = re.compile("^#(import|include) \"(?P<filename>\S*)\.h")
 
-def gen_filenames_imported_in_file(path):
+def gen_filenames_imported_in_file(path, regex_exclude):
     for line in open(path):
         results = re.search(regex_import, line)
         if results:
             filename = results.group('filename')
+            if regex_exclude is not None and regex_exclude.search(filename):
+                continue
             yield filename
 
-def dependencies_in_project(path, ext):
+def dependencies_in_project(path, ext, exclude):
     d = {}
+    
+    regex_exclude = None
+    if exclude:
+        regex_exclude = re.compile(exclude)
     
     for root, dirs, files in os.walk(path):
 
@@ -41,24 +48,27 @@ def dependencies_in_project(path, ext):
 
         for f in objc_files:
             filename = os.path.splitext(f)[0]
+            
+            if regex_exclude is not None and regex_exclude.search(filename):
+                continue
 
             if filename not in d:
                 d[filename] = Set()
             
             path = os.path.join(root, f)
             
-            for imported_filename in gen_filenames_imported_in_file(path):
+            for imported_filename in gen_filenames_imported_in_file(path, regex_exclude):
                 if imported_filename != filename and '+' not in imported_filename:
                     d[filename].add(imported_filename)
 
     return d
 
-def dependencies_in_project_with_file_extensions(path, exts):
+def dependencies_in_project_with_file_extensions(path, exts, exclude):
 
     d = {}
     
     for ext in exts:
-        d2 = dependencies_in_project(path, ext)
+        d2 = dependencies_in_project(path, ext, exclude)
         for (k, v) in d2.iteritems():
             if not k in d:
                 d[k] = Set()
@@ -124,15 +134,15 @@ def print_frequencies_chart(d):
         s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
         sys.stderr.write(s)
         
-def dependencies_in_dot_format(path):
+def dependencies_in_dot_format(path, exclude):
 
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'])
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude)
 
     two_ways_set = two_ways_dependencies(d)
 
     category_list, d = category_files(d)
 
-    pch_set = dependencies_in_project(path, '.pch')
+    pch_set = dependencies_in_project(path, '.pch', exclude)
 
     #
     
@@ -185,11 +195,12 @@ def dependencies_in_dot_format(path):
     return '\n'.join(l)
 
 def main():
-    if len(sys.argv) != 2 or not os.path.exists(sys.argv[1]):
-        print "USAGE: $ python %s PROJECT_PATH" % sys.argv[0]
-        exit(0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
+    parser.add_argument("-x", "--exclude", help="regular expression of substrings to exclude from module names")
+    args= parser.parse_args()
 
-    print dependencies_in_dot_format(sys.argv[1])
+    print dependencies_in_dot_format(args.project_path, args.exclude)
   
 if __name__=='__main__':
     main()
