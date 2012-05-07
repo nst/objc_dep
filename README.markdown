@@ -4,7 +4,7 @@ _update 2012-01-11_
 - see also jominus blog post [Dependency Graph Tool for iOS Projects](http://jomnius.blogspot.com/2012/01/dependency-graph-tool-for-ios-projects.html)
 - yet another use case on vigorouscoding.com [Better get it right the first time](http://www.vigorouscoding.com/2011/12/better-get-it-right-the-first-time/)
 
-# Refactoring by graphing class dependancies
+# Refactoring by graphing class dependencies
 
 ### Code design and loose coupling
 
@@ -14,15 +14,15 @@ Tight coupling describes a system where many components depend on many other com
 
 In Objective-C, reducing coupling generally involves [delegates](http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/ObjectiveC/Articles/ocProtocols.html) and [notifications](http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/Notifications/Introduction/introNotifications.html%23//apple_ref/doc/uid/10000043i).
 
-### Graphing class dependancies
+### Graphing class dependencies
 
-So how do we achieve loose coupling in our own code? Well, at first, we need to get a better idea on the current coupling. Let us define class dependancy: _class A depends on B iff class A imports class B header_. With such a definition, we can draw a graph of dependancies between classes by considering the Objective-C `#import` directives in each class. We assume here that the files are named according to the classes they contain.
+So how do we achieve loose coupling in our own code? Well, at first, we need to get a better idea on the current coupling. Let us define class dependency: _class A depends on B iff class A imports class B header_. With such a definition, we can draw a graph of dependencies between classes by considering the Objective-C `#import` directives in each class. We assume here that the files are named according to the classes they contain.
 
-I wrote [objc_dep.py](https://github.com/nst/objc_dep), a Python script which extracts imports from Objective-C source code. The output can then be displayed in [GraphViz](http://www.graphviz.org/) or [OmniGraffle](http://www.omnigroup.com/products/omnigraffle/). You can then see an oriented graph of dependancies between classes. Note that we could also compute metrics on coupling but it's not the point here.
+I wrote [objc_dep.py](https://github.com/nst/objc_dep), a Python script which extracts imports from Objective-C source code. The output can then be displayed in [GraphViz](http://www.graphviz.org/) or [OmniGraffle](http://www.omnigroup.com/products/omnigraffle/). You can then see an oriented graph of dependencies between classes. Note that we could also compute metrics on coupling but it's not the point here.
 
 ### Sample usage
 
-How do we get from the dependancies graph to a better design? There's no determinist algorithm and it depends on your project. Let us apply the script on [FSWalker](http://code.google.com/p/fswalker/), a small iPhone file browser I wrote a long time ago.
+How do we get from the dependencies graph to a better design? There's no determinist algorithm and it depends on your project. Let us apply the script on [FSWalker](http://code.google.com/p/fswalker/), a small iPhone file browser I wrote a long time ago.
 
 #### 1. Generate the graph
 
@@ -30,7 +30,7 @@ How do we get from the dependancies graph to a better design? There's no determi
 
 #### 2. Open it in OmniGraffle
 
-At this point, we see classes as nodes and dependancies as directed edges.
+At this point, we see classes as nodes and dependencies as directed edges.
 
 <a href="http://seriot.ch/blog/pics/objc_dep/fswalker1.png"><img src="http://seriot.ch/blog/pics/objc_dep/fswalker1.png" width="600" /></a>
 
@@ -46,9 +46,9 @@ Next, we can move the vertices around, try to group classes with a common repons
 
 <a href="http://seriot.ch/blog/pics/objc_dep/fswalker3.png"><img src="http://seriot.ch/blog/pics/objc_dep/fswalker3.png" width="600" /></a>
 
-#### 5. Study strange dependancies
+#### 5. Study strange dependencies
 
-The graph now gives a pretty good overview of the overall code structure. The controllers objects have been colored in pink, the model objects in yellow and the network part in blue. The graph allows to sport strange dependancies and question the code design. We can see at first glance that FSWalkerAppDelegate has too many dependancies. Specifically we consider:
+The graph now gives a pretty good overview of the overall code structure. The controllers objects have been colored in pink, the model objects in yellow and the network part in blue. The graph allows to sport strange dependencies and question the code design. We can see at first glance that FSWalkerAppDelegate has too many dependencies. Specifically we consider:
 
 a) unreferenced classes or clusters
 
@@ -82,6 +82,6 @@ The Cocoa framework enforces the [MVC paradigm](http://developer.apple.com/techn
 
 ### Conclusion
 
-I have found [objc_dep.py](https://github.com/nst/objc_dep) to be definitely useful on small projects as well as bigger ones. It helped me in getting a clear view of code base structure. Spotting strange dependancies allowed me to ask good questions which led to design simplifications. Such a tool could even be integrated into Apple development tools.
+I have found [objc_dep.py](https://github.com/nst/objc_dep) to be definitely useful on small projects as well as bigger ones. It helped me in getting a clear view of code base structure. Spotting strange dependencies allowed me to ask good questions which led to design simplifications. Such a tool could even be integrated into Apple development tools.
 
-Interestingly, the last chart is quite close to the mental representation I have of the code architecture. It reminds me a discussion I had 15 years ago with a friend who was a champion chess player who could play several "blind" chess games simultaneous. He explained then that he saw a blury chessboard in his head and could move around the pieces as with a small 3D camera. Focusing on a specific piece would then raise awareness of opportunities and risks - dependancies - for this piece. As a side effect, writing this script made me realize that software engineering is pretty similar to chess in this way.
+Interestingly, the last chart is quite close to the mental representation I have of the code architecture. It reminds me a discussion I had 15 years ago with a friend who was a champion chess player who could play several "blind" chess games simultaneous. He explained then that he saw a blury chessboard in his head and could move around the pieces as with a small 3D camera. Focusing on a specific piece would then raise awareness of opportunities and risks - dependencies - for this piece. As a side effect, writing this script made me realize that software engineering is pretty similar to chess in this way.
