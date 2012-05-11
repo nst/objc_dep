@@ -1,6 +1,5 @@
-_update 2012-01-11_
-
-- merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/1) support for C projects and better handling of categories
+- 2012-05-11 merged changes from jonreid who [added](https://github.com/nst/objc_dep/pull/3) a parameter to exclude class names by regex
+- 2012-01-11 merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/1) support for C projects and better handling of categories
 - see also jominus blog post [Dependency Graph Tool for iOS Projects](http://jomnius.blogspot.com/2012/01/dependency-graph-tool-for-ios-projects.html)
 - yet another use case on vigorouscoding.com [Better get it right the first time](http://www.vigorouscoding.com/2011/12/better-get-it-right-the-first-time/)
 
