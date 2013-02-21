@@ -1,3 +1,4 @@
+- 2013-02-21 merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/4) a parameter to exclude directories names by regex
 - 2012-05-11 merged changes from jonreid who [added](https://github.com/nst/objc_dep/pull/3) a parameter to exclude class names by regex
 - 2012-01-11 merged changes from jomnius who [added](https://github.com/nst/objc_dep/pull/1) support for C projects and better handling of categories
 - read [Object graph dependency analysis](http://samuelgoodwin.tumblr.com/post/18345393597/object-graph-dependency-analysis) by Samuel Goodwin
