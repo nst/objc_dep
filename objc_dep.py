@@ -9,7 +9,7 @@ Input: path of an Objective-C project
 
 Output: import dependencies Graphviz format
 
-Typical usage: $ python objc_dep.py /path/to/project > graph.dot
+Typical usage: $ python objc_dep.py /path/to/project [-x regex] [-i subfolder [subfolder ...]] > graph.dot
 
 The .dot file can be opened with Graphviz or OmniGraffle.
 
@@ -35,7 +35,7 @@ def gen_filenames_imported_in_file(path, regex_exclude):
                 continue
             yield filename
 
-def dependencies_in_project(path, ext, exclude):
+def dependencies_in_project(path, ext, exclude, ignore):
     d = {}
     
     regex_exclude = None
@@ -43,6 +43,11 @@ def dependencies_in_project(path, ext, exclude):
         regex_exclude = re.compile(exclude)
     
     for root, dirs, files in os.walk(path):
+
+        if ignore:
+            for subfolder in ignore:
+                if subfolder in dirs:
+                    dirs.remove(subfolder)
 
         objc_files = (f for f in files if f.endswith(ext))
 
@@ -63,12 +68,12 @@ def dependencies_in_project(path, ext, exclude):
 
     return d
 
-def dependencies_in_project_with_file_extensions(path, exts, exclude):
+def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore):
 
     d = {}
     
     for ext in exts:
-        d2 = dependencies_in_project(path, ext, exclude)
+        d2 = dependencies_in_project(path, ext, exclude, ignore)
         for (k, v) in d2.iteritems():
             if not k in d:
                 d[k] = Set()
@@ -134,15 +139,15 @@ def print_frequencies_chart(d):
         s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
         sys.stderr.write(s)
         
-def dependencies_in_dot_format(path, exclude):
+def dependencies_in_dot_format(path, exclude, ignore):
 
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude)
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore)
 
     two_ways_set = two_ways_dependencies(d)
 
     category_list, d = category_files(d)
 
-    pch_set = dependencies_in_project(path, '.pch', exclude)
+    pch_set = dependencies_in_project(path, '.pch', exclude, ignore)
 
     #
     
@@ -191,16 +196,22 @@ def dependencies_in_dot_format(path, exclude):
         l.append("\tnode [shape=plaintext];")
         l.append("\t\"Categories\" [label=\"%s\"];" % "\\n".join(category_list))
 
+    if ignore:
+        l.append("\t")
+        l.append("\tnode [shape=box, color=blue];")
+        l.append("\t\"Ignored\" [label=\"%s\"];" % "\\n".join(ignore))
+
     l.append("}\n")
     return '\n'.join(l)
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
-    parser.add_argument("-x", "--exclude", help="regular expression of substrings to exclude from module names")
+    parser.add_argument("-x", "--exclude", nargs='?', default='' ,help="regular expression of substrings to exclude from module names")
+    parser.add_argument("-i", "--ignore", nargs='*', help="list of subfolder names to ignore")
     args= parser.parse_args()
 
-    print dependencies_in_dot_format(args.project_path, args.exclude)
+    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore)
   
 if __name__=='__main__':
     main()
