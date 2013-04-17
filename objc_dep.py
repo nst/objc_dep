@@ -163,7 +163,6 @@ def dependencies_in_dot_format(path, exclude, ignore):
     l = []
     l.append("digraph G {")
     l.append("\tnode [shape=box];")
-    two_ways = Set()
 
     for k, deps in d.iteritems():
         if deps:
@@ -173,10 +172,8 @@ def dependencies_in_dot_format(path, exclude, ignore):
             l.append("\t\"%s\" -> {};" % (k))
         
         for k2 in deps:
-            if (k, k2) in two_ways_set or (k2, k) in two_ways_set:
-                two_ways.add((k, k2))
-            else:
-                l.append("\t\"%s\" -> \"%s\";" % (k, k2))
+	        if not ((k, k2) in two_ways_set or (k2, k) in two_ways_set):
+	            l.append("\t\"%s\" -> \"%s\";" % (k, k2))
 
     l.append("\t")
     for (k, v) in pch_set.iteritems():
@@ -185,9 +182,9 @@ def dependencies_in_dot_format(path, exclude, ignore):
             l.append("\t\"%s\" -> \"%s\" [color=red];" % (k, x))
     
     l.append("\t")
-    l.append("\tedge [color=blue];")
+    l.append("\tedge [color=blue, dir=both];")
 
-    for (k, k2) in two_ways:
+    for (k, k2) in two_ways_set:
         l.append("\t\"%s\" -> \"%s\";" % (k, k2))
     
     if category_list:
