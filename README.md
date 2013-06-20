@@ -31,9 +31,9 @@ In Objective-C, reducing coupling generally involves [delegates](http://develope
 
 ### Graphing class dependencies
 
-So how do we achieve loose coupling in our own code? Well, at first, we need to get a better idea on the current coupling. Let us define class dependency: _class A depends on B iff class A imports class B header_. With such a definition, we can draw a graph of dependencies between classes by considering the Objective-C `#import` directives in each class. We assume here that the files are named according to the classes they contain.
+So how do we achieve loose coupling in our own code? Well, at first, we need to get a better idea on the current coupling. Let us define class dependency: _class A depends on B if class A imports class B header_. With such a definition, we can draw a graph of dependencies between classes by considering the Objective-C `#import` directives in each class. We assume here that the files are named according to the classes they contain.
 
-I wrote [objc_dep.py](https://github.com/nst/objc_dep), a Python script which extracts imports from Objective-C source code. The output can then be displayed in [GraphViz](http://www.graphviz.org/) or [OmniGraffle](http://www.omnigroup.com/products/omnigraffle/). You can then see an oriented graph of dependencies between classes. Note that we could also compute metrics on coupling but it's not the point here.
+I wrote [objc_dep.py](https://github.com/nst/objc_dep), a Python script which extracts imports from Objective-C source code. The output can then be displayed in [GraphViz](http://www.graphviz.org/) or [OmniGraffle](http://www.omnigroup.com/products/omnigraffle/). You can then see an oriented graph of dependencies between classes. Note that we could also compute metrics on coupling, but it's not the point here.
 
 ### Sample usage
 
@@ -57,25 +57,25 @@ We can safely remove Objective-C [categories](http://developer.apple.com/library
 
 #### 4. Group related classes
 
-Next, we can move the vertices around, try to group classes with a common reponsability into clusters.
+Next, we can move the vertices around, try to group classes with a common responsibility into clusters.
 
 <a href="https://github.com/nst/objc_dep/raw/master/pics/fswalker3.png"><img src="https://github.com/nst/objc_dep/raw/master/pics/fswalker3.png" width="600" /></a>
 
 #### 5. Study strange dependencies
 
-The graph now gives a pretty good overview of the overall code structure. The controllers objects have been colored in pink, the model objects in yellow and the network part in blue. The graph allows to sport strange dependencies and question the code design. We can see at first glance that FSWalkerAppDelegate has too many dependencies. Specifically we consider:
+The graph now gives a pretty good overview of the overall code structure. The controller objects have been colored in pink, the model objects in yellow and the network part in blue. The graph allows to sport strange dependencies and question the code design. We can see at first glance that FSWalkerAppDelegate has too many dependencies. Specifically we consider:
 
 a) unreferenced classes or clusters
 
-This is probably dead code which can be removed.
+This is probably dead code, which can be removed.
 
-Ok, there is no unreferenced class here, although you will probably find some in bigger projects. 
+Ok, there are no unreferenced classes here, although you will probably find some in bigger projects. 
 
 b) two-ways references
 
 Maybe one class should not reference another directly, but reference a protocol implemented by the other class instead.
 
-We have two examples of two-ways references here, between HTTPServer and HTTPConnection, and also between RootViewController and FSWalkerAppDelegate. The former is part of [CocoaHTTPServer](http://code.google.com/p/cocoahttpserver/) and is not a design issue in our project. However, the latter is an issue. By looking at the code, we will notice that RootViewController doesn't actually use FSWalkerAppDelegate, the import can thus be safely removed.
+We have two examples of two-ways references here, between HTTPServer and HTTPConnection, and also between RootViewController and FSWalkerAppDelegate. The former is part of [CocoaHTTPServer](http://code.google.com/p/cocoahttpserver/) and is not a design issue in our project. However, the latter is an issue. By looking at the code, we will notice that RootViewController doesn't actually use FSWalkerAppDelegate. The import can thus be safely removed.
 
 c) weird references
 
@@ -93,10 +93,10 @@ Here is the kind of chart you can expect with a 100 classes project.
 
 ### Possible improvements
 
-The Cocoa framework enforces the [MVC paradigm](http://developer.apple.com/technologies/mac/cocoa.html) which states (to be short) that model objects and graphical objects should be clearly separated by controller objects. The script could probably be improved by drawing classes which depend on Foundation and classes which depend on AppKit/UIKit with different colors.
+The Cocoa framework enforces the [MVC paradigm](http://developer.apple.com/technologies/mac/cocoa.html), which states (to be short) that model objects and graphical objects should be clearly separated by controller objects. The script could probably be improved by drawing classes which depend on Foundation and classes which depend on AppKit/UIKit with different colors.
 
 ### Conclusion
 
 I have found [objc_dep.py](https://github.com/nst/objc_dep) to be definitely useful on small projects as well as bigger ones. It helped me in getting a clear view of code base structure. Spotting strange dependencies allowed me to ask good questions which led to design simplifications. Such a tool could even be integrated into Apple development tools.
 
-Interestingly, the last chart is quite close to the mental representation I have of the code architecture. It reminds me a discussion I had 15 years ago with a friend who was a champion chess player who could play several "blind" chess games simultaneous. He explained then that he saw a blury chessboard in his head and could move around the pieces as with a small 3D camera. Focusing on a specific piece would then raise awareness of opportunities and risks - dependencies - for this piece. As a side effect, writing this script made me realize that software engineering is pretty similar to chess in this way.
+Interestingly, the last chart is quite close to the mental representation I have of the code architecture. It reminds me a discussion I had 15 years ago with a friend who was a champion chess player who could play several "blind" chess games simultaneously. He explained then that he saw a blurry chessboard in his head and could move around the pieces as with a small 3D camera. Focusing on a specific piece would then raise awareness of opportunities and risks - dependencies - for this piece. As a side effect, writing this script made me realize that software engineering is pretty similar to chess in this way.
