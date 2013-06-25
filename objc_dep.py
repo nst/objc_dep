@@ -63,7 +63,7 @@ def dependencies_in_project(path, ext, exclude, ignore):
             path = os.path.join(root, f)
             
             for imported_filename in gen_filenames_imported_in_file(path, regex_exclude):
-                if imported_filename != filename and '+' not in imported_filename:
+                if imported_filename != filename and '+' not in imported_filename and '+' not in filename:
                     d[filename].add(imported_filename)
 
     return d
