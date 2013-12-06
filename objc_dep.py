@@ -97,6 +97,17 @@ def two_ways_dependencies(d):
                     
     return two_ways
 
+def untraversed_files(d):
+
+    dead_ends = Set()
+
+    for file_a, file_a_dependencies in d.iteritems():
+        for file_b in file_a_dependencies:
+            if not file_b in dead_ends and not file_b in d:
+                dead_ends.add(file_b)
+
+    return dead_ends
+
 def category_files(d):
     d2 = {}
     l = []
@@ -144,6 +155,7 @@ def dependencies_in_dot_format(path, exclude, ignore):
     d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore)
 
     two_ways_set = two_ways_dependencies(d)
+    untraversed_set = untraversed_files(d)
 
     category_list, d = category_files(d)
 
@@ -172,8 +184,8 @@ def dependencies_in_dot_format(path, exclude, ignore):
             l.append("\t\"%s\" -> {};" % (k))
         
         for k2 in deps:
-	        if not ((k, k2) in two_ways_set or (k2, k) in two_ways_set):
-	            l.append("\t\"%s\" -> \"%s\";" % (k, k2))
+            if not ((k, k2) in two_ways_set or (k2, k) in two_ways_set):
+                l.append("\t\"%s\" -> \"%s\";" % (k, k2))
 
     l.append("\t")
     for (k, v) in pch_set.iteritems():
@@ -186,6 +198,9 @@ def dependencies_in_dot_format(path, exclude, ignore):
 
     for (k, k2) in two_ways_set:
         l.append("\t\"%s\" -> \"%s\";" % (k, k2))
+
+    for k in untraversed_set:
+        l.append("\t\"%s\" [color=gray, style=dashed, fontcolor=gray]" % k)
     
     if category_list:
         l.append("\t")
