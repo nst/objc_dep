@@ -152,7 +152,7 @@ def print_frequencies_chart(d):
         
 def dependencies_in_dot_format(path, exclude, ignore):
 
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore)
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore)
 
     two_ways_set = two_ways_dependencies(d)
     untraversed_set = untraversed_files(d)
