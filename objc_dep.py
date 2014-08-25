@@ -221,11 +221,11 @@ def dependencies_in_dot_format(path, exclude, ignore, system, extensions):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     parser.add_argument("-x", "--exclude", nargs='?', default='' ,help="regular expression of substrings to exclude from module names")
     parser.add_argument("-i", "--ignore", nargs='*', help="list of subfolder names to ignore")
     parser.add_argument("-s", "--system", action='store_true', default=False, help="include system dependencies")
     parser.add_argument("-e", "--extensions", action='store_true', default=False, help="print file extensions")
+    parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     args= parser.parse_args()
 
     print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions)
