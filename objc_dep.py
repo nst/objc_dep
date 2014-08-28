@@ -24,18 +24,20 @@ import re
 from os.path import basename
 import argparse
 
-regex_import = re.compile("^#(import|include) \"(?P<filename>\S*)\.h")
+local_regex_import = re.compile("^\s*#(?:import|include)\s+\"(?P<filename>\S*)(?P<extension>\.(?:h|hpp|hh))?\"")
+system_regex_import = re.compile("^\s*#(?:import|include)\s+[\"<](?P<filename>\S*)(?P<extension>\.(?:h|hpp|hh))?[\">]")
 
-def gen_filenames_imported_in_file(path, regex_exclude):
+def gen_filenames_imported_in_file(path, regex_exclude, system, extensions):
     for line in open(path):
-        results = re.search(regex_import, line)
+        results = re.search(system_regex_import, line) if system else re.search(local_regex_import, line)
         if results:
             filename = results.group('filename')
-            if regex_exclude is not None and regex_exclude.search(filename):
+            extension = results.group('extension')
+            if regex_exclude is not None and regex_exclude.search(filename + extension):
                 continue
-            yield filename
+            yield (filename + extension) if extension else filename
 
-def dependencies_in_project(path, ext, exclude, ignore):
+def dependencies_in_project(path, ext, exclude, ignore, system, extensions):
     d = {}
     
     regex_exclude = None
@@ -52,8 +54,8 @@ def dependencies_in_project(path, ext, exclude, ignore):
         objc_files = (f for f in files if f.endswith(ext))
 
         for f in objc_files:
-            filename = os.path.splitext(f)[0]
             
+            filename = f if extensions else os.path.splitext(f)[0]
             if regex_exclude is not None and regex_exclude.search(filename):
                 continue
 
@@ -61,19 +63,20 @@ def dependencies_in_project(path, ext, exclude, ignore):
                 d[filename] = Set()
             
             path = os.path.join(root, f)
-            
-            for imported_filename in gen_filenames_imported_in_file(path, regex_exclude):
+
+            for imported_filename in gen_filenames_imported_in_file(path, regex_exclude, system, extensions):
                 if imported_filename != filename and '+' not in imported_filename and '+' not in filename:
+                    imported_filename = imported_filename if extensions else os.path.splitext(imported_filename)[0]
                     d[filename].add(imported_filename)
 
     return d
 
-def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore):
+def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, system, extensions):
 
     d = {}
     
     for ext in exts:
-        d2 = dependencies_in_project(path, ext, exclude, ignore)
+        d2 = dependencies_in_project(path, ext, exclude, ignore, system, extensions)
         for (k, v) in d2.iteritems():
             if not k in d:
                 d[k] = Set()
@@ -149,17 +152,17 @@ def print_frequencies_chart(d):
     for i in range(0, max_length+1):
         s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
         sys.stderr.write(s)
-        
-def dependencies_in_dot_format(path, exclude, ignore):
 
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore)
+def dependencies_in_dot_format(path, exclude, ignore, system, extensions):
+    
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore, system, extensions)
 
     two_ways_set = two_ways_dependencies(d)
     untraversed_set = untraversed_files(d)
 
     category_list, d = category_files(d)
 
-    pch_set = dependencies_in_project(path, '.pch', exclude, ignore)
+    pch_set = dependencies_in_project(path, '.pch', exclude, ignore, system, extensions)
 
     #
     
@@ -218,12 +221,14 @@ def dependencies_in_dot_format(path, exclude, ignore):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     parser.add_argument("-x", "--exclude", nargs='?', default='' ,help="regular expression of substrings to exclude from module names")
     parser.add_argument("-i", "--ignore", nargs='*', help="list of subfolder names to ignore")
+    parser.add_argument("-s", "--system", action='store_true', default=False, help="include system dependencies")
+    parser.add_argument("-e", "--extensions", action='store_true', default=False, help="print file extensions")
+    parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     args= parser.parse_args()
 
-    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore)
-  
+    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions)
+
 if __name__=='__main__':
     main()
