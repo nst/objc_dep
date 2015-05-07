@@ -32,7 +32,7 @@ def gen_filenames_imported_in_file(path, regex_exclude, system, extensions):
         results = re.search(system_regex_import, line) if system else re.search(local_regex_import, line)
         if results:
             filename = results.group('filename')
-            extension = results.group('extension')
+            extension = results.group('extension') if results.group('extension') else ""
             if regex_exclude is not None and regex_exclude.search(filename + extension):
                 continue
             yield (filename + extension) if extension else filename
