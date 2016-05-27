@@ -71,7 +71,7 @@ def dependencies_in_project(path, ext, exclude, ignore, system, extensions):
 
     return d
 
-def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, system, extensions):
+def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, system, extensions, root_class):
 
     d = {}
     
@@ -81,6 +81,21 @@ def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, sy
             if not k in d:
                 d[k] = Set()
             d[k] = d[k].union(v)
+
+    if root_class:
+        def parse_requirements(tree, root, known_deps=[]):
+            next_deps = list(tree[root])
+            new_deps = []
+
+            for dep in next_deps:
+                if dep not in known_deps and dep in tree:
+                    new_deps += parse_requirements(tree, dep, known_deps + next_deps)
+
+            return (new_deps + next_deps)
+
+        requirements = set(parse_requirements(d, root_class))
+
+        return { k: d[k] for k in requirements if k in d}
 
     return d
 
@@ -153,9 +168,9 @@ def print_frequencies_chart(d):
         s = "%2d | %s\n" % (i, ", ".join(sorted(list(l[i]))))
         sys.stderr.write(s)
 
-def dependencies_in_dot_format(path, exclude, ignore, system, extensions):
+def dependencies_in_dot_format(path, exclude, ignore, system, extensions, root_class):
     
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore, system, extensions)
+    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore, system, extensions, root_class)
 
     two_ways_set = two_ways_dependencies(d)
     untraversed_set = untraversed_files(d)
@@ -225,10 +240,11 @@ def main():
     parser.add_argument("-i", "--ignore", nargs='*', help="list of subfolder names to ignore")
     parser.add_argument("-s", "--system", action='store_true', default=False, help="include system dependencies")
     parser.add_argument("-e", "--extensions", action='store_true', default=False, help="print file extensions")
+    parser.add_argument("-r", "--root", default='', help="Class to use as root of dependency graph")
     parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     args= parser.parse_args()
 
-    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions)
+    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions, args.root)
 
 if __name__=='__main__':
     main()
