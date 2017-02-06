@@ -7,7 +7,7 @@
 """
 Input: path of an Objective-C project
 
-Output: import dependencies Graphviz format
+Output: import dependencies Graphviz format, unless --test is passed in which case outputs a successful exit status of 0 if no two-way dependencies are found
 
 Typical usage: $ python objc_dep.py /path/to/project [-x regex] [-i subfolder [subfolder ...]] > graph.dot
 
@@ -26,6 +26,7 @@ import argparse
 
 local_regex_import = re.compile("^\s*#(?:import|include)\s+\"(?P<filename>\S*)(?P<extension>\.(?:h|hpp|hh))?\"")
 system_regex_import = re.compile("^\s*#(?:import|include)\s+[\"<](?P<filename>\S*)(?P<extension>\.(?:h|hpp|hh))?[\">]")
+objc_extensions = ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp']
 
 def gen_filenames_imported_in_file(path, regex_exclude, system, extensions):
     for line in open(path):
@@ -170,7 +171,7 @@ def print_frequencies_chart(d):
 
 def dependencies_in_dot_format(path, exclude, ignore, system, extensions, root_class):
     
-    d = dependencies_in_project_with_file_extensions(path, ['.h', '.hh', '.hpp', '.m', '.mm', '.c', '.cc', '.cpp'], exclude, ignore, system, extensions, root_class)
+    d = dependencies_in_project_with_file_extensions(path, objc_extensions, exclude, ignore, system, extensions, root_class)
 
     two_ways_set = two_ways_dependencies(d)
     untraversed_set = untraversed_files(d)
@@ -241,10 +242,24 @@ def main():
     parser.add_argument("-s", "--system", action='store_true', default=False, help="include system dependencies")
     parser.add_argument("-e", "--extensions", action='store_true', default=False, help="print file extensions")
     parser.add_argument("-r", "--root", default='', help="Class to use as root of dependency graph")
+    parser.add_argument("-t", "--test", action='store_true', default=False, help="Exit with a success status of 0 if no two-way dependencies exist or failure otherwise, instead of outputting a graph")
     parser.add_argument("project_path", help="path to folder hierarchy containing Objective-C files")
     args= parser.parse_args()
 
-    print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions, args.root)
+    if not args.test:
+        print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions, args.root)
+    else:
+        # Test if two-way dependencies exist. If none do, then exit on success (0), otherwise exit on failure (1)
+        d = dependencies_in_project_with_file_extensions(args.project_path, objc_extensions, args.exclude, args.ignore, args.system, args.extensions, args.root)
+        two_ways_set = two_ways_dependencies(d)
+
+        if len(two_ways_set) == 0:
+            sys.exit(0)
+        else:
+            sys.stderr.write("Error: Found two way dependencies:\n")
+            for (k, k2) in two_ways_set:
+                sys.stderr.write("%s <-> %s\n" % (k, k2))
+            sys.exit(1)
 
 if __name__=='__main__':
     main()
