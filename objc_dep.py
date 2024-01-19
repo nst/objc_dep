@@ -19,7 +19,6 @@ The .dot file can be opened with Graphviz or OmniGraffle.
 
 import sys
 import os
-from sets import Set
 import re
 from os.path import basename
 import argparse
@@ -61,7 +60,7 @@ def dependencies_in_project(path, ext, exclude, ignore, system, extensions):
                 continue
 
             if filename not in d:
-                d[filename] = Set()
+                d[filename] = set()
             
             path = os.path.join(root, f)
 
@@ -78,9 +77,9 @@ def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, sy
     
     for ext in exts:
         d2 = dependencies_in_project(path, ext, exclude, ignore, system, extensions)
-        for (k, v) in d2.iteritems():
+        for (k, v) in d2.items():
             if not k in d:
-                d[k] = Set()
+                d[k] = set()
             d[k] = d[k].union(v)
 
     if root_class:
@@ -102,11 +101,11 @@ def dependencies_in_project_with_file_extensions(path, exts, exclude, ignore, sy
 
 def two_ways_dependencies(d):
 
-    two_ways = Set()
+    two_ways = set()
 
     # d is {'a1':[b1, b2], 'a2':[b1, b3, b4], ...}
 
-    for a, l in d.iteritems():
+    for a, l in d.items():
         for b in l:
             if b in d and a in d[b]:
                 if (a, b) in two_ways or (b, a) in two_ways:
@@ -118,9 +117,9 @@ def two_ways_dependencies(d):
 
 def untraversed_files(d):
 
-    dead_ends = Set()
+    dead_ends = set()
 
-    for file_a, file_a_dependencies in d.iteritems():
+    for file_a, file_a_dependencies in d.items():
         for file_b in file_a_dependencies:
             if not file_b in dead_ends and not file_b in d:
                 dead_ends.add(file_b)
@@ -131,7 +130,7 @@ def category_files(d):
     d2 = {}
     l = []
     
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if not v and '+' in k:
             l.append(k)
         else:
@@ -142,27 +141,28 @@ def category_files(d):
 def referenced_classes_from_dict(d):
     d2 = {}
 
-    for k, deps in d.iteritems():
+    for k, deps in d.items():
         for x in deps:
-            d2.setdefault(x, Set())
+            d2.setdefault(x, set())
             d2[x].add(k)
     
     return d2
     
 def print_frequencies_chart(d):
     
-    lengths = map(lambda x:len(x), d.itervalues())
+    lengths = map(lambda x:len(x), d.values())
     if not lengths: return
     max_length = max(lengths)
-    
+    lengths_list = list(lengths)
+
     for i in range(0, max_length+1):
-        s = "%2d | %s\n" % (i, '*'*lengths.count(i))
+        s = "%2d | %s\n" % (i, '*'*lengths_list.count(i))
         sys.stderr.write(s)
 
     sys.stderr.write("\n")
     
-    l = [Set() for i in range(max_length+1)]
-    for k, v in d.iteritems():
+    l = [set() for i in range(max_length+1)]
+    for k, v in d.items():
         l[len(v)].add(k)
 
     for i in range(0, max_length+1):
@@ -195,7 +195,7 @@ def dependencies_in_dot_format(path, exclude, ignore, system, extensions, root_c
     l.append("digraph G {")
     l.append("\tnode [shape=box];")
 
-    for k, deps in d.iteritems():
+    for k, deps in d.items():
         if deps:
             deps.discard(k)
         
@@ -207,7 +207,7 @@ def dependencies_in_dot_format(path, exclude, ignore, system, extensions, root_c
                 l.append("\t\"%s\" -> \"%s\";" % (k, k2))
 
     l.append("\t")
-    for (k, v) in pch_set.iteritems():
+    for (k, v) in pch_set.items():
         l.append("\t\"%s\" [color=red];" % k)
         for x in v:
             l.append("\t\"%s\" -> \"%s\" [color=red];" % (k, x))
@@ -247,7 +247,7 @@ def main():
     args= parser.parse_args()
 
     if not args.test:
-        print dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions, args.root)
+        print(dependencies_in_dot_format(args.project_path, args.exclude, args.ignore, args.system, args.extensions, args.root))
     else:
         # Test if two-way dependencies exist. If none do, then exit on success (0), otherwise exit on failure (1)
         d = dependencies_in_project_with_file_extensions(args.project_path, objc_extensions, args.exclude, args.ignore, args.system, args.extensions, args.root)
